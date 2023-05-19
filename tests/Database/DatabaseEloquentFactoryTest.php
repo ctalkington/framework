@@ -156,6 +156,25 @@ class DatabaseEloquentFactoryTest extends TestCase
         $this->assertEquals('post-options', $post->user->options);
     }
 
+    public function test_expanded_closure_attribute_returning_a_factory_is_resolved_when_recycled()
+    {
+        $user = FactoryTestUserFactory::new()->create([
+            'options' => 'recycled-options',
+        ]);
+
+        $post = FactoryTestPostFactory::new()
+            ->recycle($user)
+            ->create([
+                'title' => 'post',
+                'user_id' => fn ($attributes) => FactoryTestUserFactory::new([
+                    'options' => $attributes['title'].'-options',
+                ]),
+            ]);
+
+        $this->assertEquals($user->id, $post->user_id);
+        $this->assertEquals('recycled-options', $post->user->options);
+    }
+
     public function test_make_creates_unpersisted_model_instance()
     {
         $user = FactoryTestUserFactory::new()->makeOne();
